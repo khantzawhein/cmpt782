@@ -47,6 +47,7 @@ This platform demonstrates common AI security attacks and defense mechanisms thr
 - **Information Disclosure**: Extract sensitive data
 - **Context Manipulation**: Abuse conversation memory
 - **Social Engineering**: Manipulate through false authority
+- **RAG Poisoning**: Upload documents and query a persistent Chroma knowledge base
 
 ### Defense Laboratory
 - **Pattern Analysis**: Test defense mechanisms
@@ -70,8 +71,9 @@ This platform demonstrates common AI security attacks and defense mechanisms thr
 
 ### 1. Clone Repository
 ```bash
-git clone <repository-url>
-cd ai-security-training-platform
+git clone https://github.com/sfucybersecurity/cmpt782.git
+cd cmpt782
+git switch AiLab
 ```
 
 ### 2. Create Virtual Environment
@@ -120,6 +122,37 @@ The web interface will open at `http://localhost:8501`
 3. Enter the key in the Attack Lab interface
 
 The lab uses Groq's `openai/gpt-oss-120b` model with a 2,000-token completion limit.
+
+## RAG Poisoning Exercise
+
+RAG is integrated into `app.py` and `backend.py`; install `requirements.txt`
+and use the normal startup commands above.
+The merged requirements retain the existing application versions and use
+Chroma 1.0.20, whose wheel installs on the configured Python 3.12/macOS environment.
+
+1. Open the Attack Lab and select `rag_poisoning`.
+2. Enter a unique document ID and document content, then select **Upload to Knowledge Base**.
+3. Enter a related query or select a template, then select **Execute Attack**.
+
+Queries automatically retrieve the three nearest documents from the knowledge base.
+
+The authenticated JSON endpoint `POST /api/documents/upload` accepts
+`{"doc_id": "loan_policy_test", "content": "Loan interest rates: ..."}`.
+To retrieve documents through `POST /api/chat`, include
+`"context": {"is_rag_attack": true}` alongside the message and Groq API key.
+Chat responses include `rag_documents` and `poisoned_documents` IDs.
+`success` reports request completion, and `poisoned_documents` reports retrieval
+of flagged content. `rag_attack_succeeded` reports whether the final response
+contains a known demo password after poisoned content was retrieved. The model
+can ignore the injected instructions, so retrieving poisoned content does not
+guarantee a successful attack.
+
+Chroma initializes on the first upload or RAG query, stores data in `chroma_db/`,
+and seeds five demo documents, including three intentionally poisoned examples.
+Its default embedding model may require a download on first use. Uploaded
+poisoning patterns are labeled and recorded in the security log. Retrieving a
+poisoned document exercises the supplied simulated credential-disclosure flow.
+Duplicate document IDs are rejected; choose a new ID for each upload.
 
 ## Inspect Server Traffic with Burp Suite
 

@@ -7,3 +7,4 @@ plotly==5.17.0
 groq==0.31.1
 numpy==1.26.4
 pydantic==2.11.9
+chromadb==1.0.20
