@@ -35,7 +35,7 @@ A comprehensive hands-on cybersecurity lab for learning to exploit and secure Mo
 ### Install Dependencies
 
 ```bash
-pip install fastapi uvicorn requests fastmcp streamlit pandas plotly sqlite3
+pip install fastapi uvicorn requests fastmcp streamlit pandas plotly PyJWT Jinja2 PyYAML
 ```
 
 ### Run the Lab
@@ -44,15 +44,14 @@ pip install fastapi uvicorn requests fastmcp streamlit pandas plotly sqlite3
 
 ```bash
 python backend.py
-python backend.py
 ```
 
-_Starts vulnerable MCP servers on port 8000_
+_Starts vulnerable MCP servers on port 8085_
 
 #### Terminal 2 - Start Frontend UI:
 
 ```bash
-streamlit run frontend.py
+streamlit run app.py
 ```
 
 _Launches web interface on port 8501_
@@ -60,8 +59,8 @@ _Launches web interface on port 8501_
 ### Access Points
 
 - 🌐 **Frontend UI:** http://localhost:8501
-- 🔌 **Backend API:** http://localhost:8000
-- 📚 **API Documentation:** http://localhost:8000/docs
+- 🔌 **Backend API:** http://localhost:8085
+- 📚 **API Documentation:** http://localhost:8085/docs
 
 ---
 
@@ -134,7 +133,7 @@ _Launches web interface on port 8501_
 
 ```bash
 # Option 1: Docker
-docker run -it --rm -p 8000:8000 -p 8501:8501 python:3.11 /bin/bash
+docker run -it --rm -p 8085:8085 -p 8501:8501 python:3.11 /bin/bash
 
 # Option 2: Python Virtual Environment
 python -m venv mcp_lab_venv
@@ -152,7 +151,7 @@ mcp_security_lab/
 │                            # - Challenge system, leaderboards
 │                            # - CTF flag verification
 │
-├── frontend.py              # Streamlit web interface
+├── app.py                   # Streamlit web interface
 │                            # - Attack/Defend phases
 │                            # - Challenge mode
 │                            # - Leaderboards & stats
@@ -174,18 +173,18 @@ mcp_security_lab/
 ### Backend won't start
 
 ```bash
-# Check if port 8000 is in use
-lsof -i :8000
+# Check if port 8085 is in use
+lsof -i :8085
 # Kill process if needed
 kill -9 <PID>
 
 # Or use different port
-uvicorn backend_mcp:app --port 8080
+uvicorn backend:app --port 8080
 ```
 
 ### Frontend can't connect to backend
 
-1. Verify backend is running: `curl http://localhost:8000/health`
+1. Verify backend is running: `curl http://localhost:8085/health`
 2. Check firewall isn't blocking localhost
 3. Ensure both terminals are active
 4. Try restarting both backend and frontend
@@ -195,14 +194,14 @@ uvicorn backend_mcp:app --port 8080
 ```bash
 # Reset database (CAUTION: Deletes all progress)
 rm data/mcp_lab.db
-python backend_mcp.py  # Will recreate database
+python backend.py  # Will recreate database
 ```
 
 ### Module not found errors
 
 ```bash
 # Reinstall all dependencies
-pip install --upgrade fastapi uvicorn requests fastmcp streamlit pandas plotly
+pip install --upgrade fastapi uvicorn requests fastmcp streamlit pandas plotly PyJWT Jinja2 PyYAML
 ```
 
 ---
@@ -212,7 +211,7 @@ pip install --upgrade fastapi uvicorn requests fastmcp streamlit pandas plotly
 ### 1. SQL Injection - Extract Admin Password
 
 ```bash
-curl -X POST http://localhost:8000/api/attack \
+curl -X POST http://localhost:8085/api/attack \
   -H "Content-Type: application/json" \
   -d '{
     "student_id": "student001",
@@ -227,7 +226,7 @@ curl -X POST http://localhost:8000/api/attack \
 ### 2. Command Injection - Execute System Commands
 
 ```bash
-curl -X POST http://localhost:8000/api/attack \
+curl -X POST http://localhost:8085/api/attack \
   -H "Content-Type: application/json" \
   -d '{
     "student_id": "student001",
@@ -242,7 +241,7 @@ curl -X POST http://localhost:8000/api/attack \
 ### 3. Path Traversal - Read Sensitive Files
 
 ```bash
-curl -X POST http://localhost:8000/api/attack \
+curl -X POST http://localhost:8085/api/attack \
   -H "Content-Type: application/json" \
   -d '{
     "student_id": "student001",
@@ -257,7 +256,7 @@ curl -X POST http://localhost:8000/api/attack \
 ### 4. SSRF - Access Cloud Metadata
 
 ```bash
-curl -X POST http://localhost:8000/api/attack \
+curl -X POST http://localhost:8085/api/attack \
   -H "Content-Type: application/json" \
   -d '{
     "student_id": "student001",
@@ -272,7 +271,7 @@ curl -X POST http://localhost:8000/api/attack \
 ### 5. Prompt Injection - Override Instructions
 
 ```bash
-curl -X POST http://localhost:8000/api/attack \
+curl -X POST http://localhost:8085/api/attack \
   -H "Content-Type: application/json" \
   -d '{
     "student_id": "student001",
@@ -329,7 +328,7 @@ Built for cybersecurity education and MCP security awareness.
 **Issues or Questions?**
 
 - Check the troubleshooting section above
-- Review API docs at http://localhost:8000/docs
+- Review API docs at http://localhost:8085/docs
 - Examine browser console for frontend errors
 - Check terminal output for backend errors
 
