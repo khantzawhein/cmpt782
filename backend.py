@@ -152,7 +152,7 @@ def init_vulnerable_db():
     conn.commit()
     conn.close()
 
-init_vulnerable_db()
+# init_vulnerable_db()
 
 def query_users_func(username: str) -> dict:
     try:
@@ -678,4 +678,5 @@ if __name__ == "__main__":
     print("📖 API Docs: http://localhost:8085/docs")
     print("🔍 MCP Inspector: http://localhost:8085/api/mcp/inspect/{{server_id}}")
     print("=" * 80)
+    init_vulnerable_db()
     uvicorn.run(app, host="127.0.0.1", port=8085)

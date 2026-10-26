@@ -118,10 +118,13 @@ def main():
         st.markdown("---")
         
         # Navigation
+        # Keyed so programmatic navigation (e.g. "Start Challenge") can switch
+        # pages by setting st.session_state.nav_radio before this widget renders.
         page = st.radio(
             "Navigation",
             ["🎯 Free Play", "🏆 Challenges", "📊 Leaderboard", "🛡️ Defense", "📚 Learn"],
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            key="nav_radio"
         )
         
         if "🎯" in page:
@@ -168,7 +171,27 @@ def render_attack():
         return
     
     servers = servers_data.get("servers", [])
-    
+
+    # Active challenge context (set via "Start Challenge" in Challenge Mode)
+    active_challenge = st.session_state.get('selected_challenge')
+    if active_challenge:
+        st.success(f"🎯 **Active Challenge:** {active_challenge['title']} — {active_challenge['points']} pts")
+        st.markdown(f"**Goal:** {active_challenge['description']}")
+        st.markdown(
+            f"**Target:** server `{active_challenge['server']}` → tool `{active_challenge['tool']}`"
+        )
+        # Auto-select the target server once when the challenge is loaded
+        if st.session_state.get('_challenge_loaded') != active_challenge['id']:
+            match = next((s for s in servers if s['id'] == active_challenge['server']), None)
+            if match:
+                st.session_state.selected_server = match
+            st.session_state._challenge_loaded = active_challenge['id']
+        if st.button("✖️ Exit Challenge"):
+            st.session_state.selected_challenge = None
+            st.session_state._challenge_loaded = None
+            st.rerun()
+        st.markdown("---")
+
     # Server selection
     st.subheader("Select MCP Server Target")
     
@@ -202,7 +225,12 @@ def render_attack():
         # Attack form
         st.subheader("Craft Exploit")
         
-        selected_tool = st.selectbox("MCP Tool", server['tools'])
+        default_tool_index = 0
+        if (active_challenge
+                and server['id'] == active_challenge['server']
+                and active_challenge['tool'] in server['tools']):
+            default_tool_index = server['tools'].index(active_challenge['tool'])
+        selected_tool = st.selectbox("MCP Tool", server['tools'], index=default_tool_index)
         
         st.markdown("**Tool Parameters:**")
         st.info("Explore the MCP tool to discover its parameters and injection points. Use the MCP inspector or API docs.")
@@ -353,10 +381,20 @@ def render_challenge_mode():
                                 st.session_state.hint_level[challenge['id']] = current_hint_level + 1
                     
                     with col2:
-                        if st.button("🎯 Start Challenge", key=f"start_{challenge['id']}"):
-                            st.session_state.selected_challenge = challenge
-                            st.session_state.page = 'attack'
-                            st.rerun()
+                        # on_click runs at the start of the next rerun, BEFORE the
+                        # sidebar radio is instantiated, so it can set nav_radio and
+                        # actually switch to the attack page (setting it after the
+                        # widget exists would raise a StreamlitAPIException).
+                        st.button(
+                            "🎯 Start Challenge",
+                            key=f"start_{challenge['id']}",
+                            on_click=lambda c=challenge: st.session_state.update(
+                                selected_challenge=c,
+                                _challenge_loaded=None,
+                                nav_radio="🎯 Free Play",
+                                page='attack',
+                            ),
+                        )
 
 # ============================================================================
 # LEADERBOARD
